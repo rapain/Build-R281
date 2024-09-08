@@ -1,0 +1,47 @@
+#!/bin/sh
+#
+# Copyright (c) 2023 LENAR
+#
+CMD="$1"
+
+help(){
+	printf "Usage: `basename $0` <Prod>\n\n"
+	printf "<Prod>:\n"
+	printf "0 - Disable Production Mode\n"
+	printf "2 - Enable Production Mode\n"
+	printf "? - Production Mode Status\n"
+}
+
+change(){
+	atcmd "AT*PROD=$CMD" >> /dev/null 2>&1
+	check
+}
+
+check(){
+	PROD=$(atcmd "AT*PROD?" | awk -F: '{print $2}' | xargs)
+	case "$PROD" in
+		0)
+			RESULT="Disabled"
+		;;
+		1|2)
+			RESULT="Enabled"
+		;;
+	esac
+	echo "Status: $RESULT\n"
+	echo "Note: Reboot Is Needed After Changing Production Mode"
+}
+
+case "$1" in
+	H|h)
+		help
+	;;
+	0|1|2)
+		change
+	;;
+	\?)
+		check
+	;;
+	*)
+		echo "Enter H For More Details"
+	;;
+esac

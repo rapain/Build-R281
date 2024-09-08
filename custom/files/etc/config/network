@@ -1,0 +1,48 @@
+config interface 'loopback'
+	option device 'lo'
+	option proto 'static'
+	option ipaddr '127.0.0.1'
+	option netmask '255.0.0.0'
+
+config globals 'globals'
+	option packet_steering '1'
+	option ula_prefix 'auto'
+
+config device
+	option name 'br-lan'
+	option type 'bridge'
+	list ports 'lan1'
+	list ports 'lan2'
+	list ports 'lan3'
+
+config device
+	option name 'wan'
+	option type 'bridge'
+
+config interface 'lan'
+	option device 'br-lan'
+	option proto 'static'
+	option ipaddr '192.168.1.1'
+	option netmask '255.255.255.0'
+	option ip6assign '60'
+
+config interface 'wan'
+	option device 'wan'
+	option proto 'dhcp'
+	option metric '20'
+
+config interface 'wwan'
+	option device '/dev/ttyACM0'
+	option proto 'ncm'
+	option pdptype 'IP'
+	option apn 'internet'
+	option username 'any'
+	option password 'any'
+	option ipv6 'auto'
+	option delay '8'
+	option metric '30'
+
+config interface 'openvpn'
+	option proto 'none'
+	option device 'tun0'
+	option metric '10'

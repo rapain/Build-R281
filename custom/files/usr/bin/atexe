@@ -1,0 +1,32 @@
+#!/bin/sh
+#
+# Copyright (c) 2023 LENAR
+#
+DEV=$(find /dev -name ttyACM*)
+CMD="$@"
+
+help(){
+	printf "Usage: `basename $0` <Command>\n\n"
+	printf "<Command>:\n"
+	printf "- env\n"
+	printf "- getprop\n"
+	printf "- ifconfig\n"
+	printf "- jffs2reset -y\n"
+	printf "- reboot\n"
+}
+
+run(){
+	sms_tool -d "$DEV" at "AT%EXE=\"$CMD\""
+}
+
+case "$1" in
+	"")
+		echo "Enter H For More Details"
+	;;
+	H|h)
+		help
+	;;
+	*)
+		run
+	;;
+esac

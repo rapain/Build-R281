@@ -1,0 +1,90 @@
+#!/bin/sh
+#
+# Copyright (c) 2023 LENAR
+#
+MEP=$(atexe strings /dev/mtd1 | grep -Eo "[0-9]{8}" | tail -1)
+PN="$2"
+
+help(){
+	printf "Usage: `basename $0` <Method> <PN>\n\n"
+	printf "<Method>:\n"
+	printf "R - Read MEP\n"
+	printf "U - Unlock\n"
+	printf "L - Lock\n"
+	printf "T - Test Your PN\n"
+	printf "? - Lock Status\n\n"
+	printf "<PN>: Your PN\n"
+}
+
+check(){
+	if [ -z "$MEP" ]; then
+		echo "MEP Not Found"
+		exit 0
+	fi
+}
+
+read(){
+	check
+	echo -e "Read Success"
+	echo "PN: $MEP"
+}
+
+unlock(){
+	check
+	atcmd "AT+CLCK=PN,0,$MEP,16" >> /dev/null 2>&1
+	status
+}
+
+lock(){
+	check
+	atcmd "AT+CLCK=PN,1,$MEP,16" >> /dev/null 2>&1
+	status
+}
+
+test(){
+	if [ -z "$PN" ]; then
+		echo "PN Empty"
+	elif [[ "$PN" =~ "^[0-9]+$" ]]; then
+		atcmd "AT+CLCK=PN,0,$PN,16" >> /dev/null 2>&1
+		echo "Done Check Your Status"
+	else
+		echo "PN Not Valid"
+	fi
+}
+
+status(){
+	CHECK=$(atcmd "AT+CLCK=PN,2" | awk -F: '{print $2}' | xargs)
+	case "$CHECK" in
+		0)
+			STATUS="Unlock"
+		;;
+		1)
+			STATUS="Lock"
+		;;
+	esac
+	echo "Status: $STATUS"
+}
+
+case "$1" in
+	H|h)
+		help
+	;;
+	R|r)
+		read
+	;;
+	U|u)
+		unlock
+	;;
+	L|l)
+		lock
+	;;
+	T|t)
+		test
+	;;
+	\?)
+		status
+	;;
+	*)
+		echo "Enter H For More Details"
+	;;
+esac

@@ -1,0 +1,19 @@
+#!/bin/sh
+#
+# Copyright (c) 2023 LENAR
+#
+DEV=$(find /dev -name ttyACM*)
+CMD="$@"
+
+run(){
+	sms_tool -d "$DEV" at "$CMD"
+}
+
+case "$1" in
+	"")
+		echo "Usage: `basename $0` <AT Command>"
+	;;
+	*)
+		run
+	;;
+esac

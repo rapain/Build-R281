@@ -1,0 +1,128 @@
+#!/bin/sh
+#
+# Copyright (c) 2023 LENAR
+#
+MODE="$1"
+ACT="$2"
+FREQ="$3"
+CELLID="$4"
+
+help(){
+	printf "Usage: `basename $0` <Mode> <Act> <Freq> <Cellid>\n\n"
+	printf "<Mode>:\n"
+	printf "0 - Frequency/Cell Disabled\n"
+	printf "1 - Frequency Lock\n"
+	printf "2 - Cell Lock\n"
+	printf "? - Lock Status\n\n"
+	printf "<Act>:\n0 - GSM\n1 - UMTS_TD\n2 - UMTS_WB\n3 - LTE\n\n"
+	printf "<Freq>:\nRadio Frequency Channel\n\n"
+	printf "<Cellid>:\nPhysical Cell ID\n"
+}
+
+check(){
+	CHECK=$(atcmd "AT*CELL?" | tr -dc "0-9" | cut -c-1)
+}
+
+enable(){
+	check
+	if [ -z "$ACT" ] || [ -z "$FREQ" ]; then
+		echo "Missing Argument"
+		exit 0
+	elif [[ "$ACT" == "[0-3]" ]] && [[ "$FREQ" =~ "^[0-9]+$" ]]; then
+		if [ -z "$CELLID" ]; then
+			ID="0"
+		elif [[ ! "$CELLID" =~ "^[0-9]+$" ]]; then
+			echo "Cell ID Not Valid"
+			exit 0
+		else
+			ID="$CELLID"
+		fi
+	else
+		echo "Argument Not Valid"
+		exit 0
+	fi
+	case "$MODE" in
+		1)
+			TITLE="Frequency"
+		;;
+		2)
+			TITLE="Cell"
+		;;
+	esac
+	case "$ACT" in
+		0)
+			DATA="GSM"
+		;;
+		1)
+			DATA="UMTS_TD"
+		;;
+		2)
+			DATA="UMTS_WB"
+		;;
+		3)
+			DATA="LTE"
+		;;
+	esac
+	atcmd "AT*CELL=$MODE,$ACT,0,$FREQ,$ID" >> /dev/null 2>&1
+	echo -e "$TITLE Lock Enabled\n"
+	echo "$DATA Band Frequency $FREQ Cellid $ID"
+	[[ "$CHECK" == "[0-2]" ]] && restart
+}
+
+disable(){
+	check
+	case "$CHECK" in
+		0)
+			RESULT="Already"
+		;;
+		1)
+			RESULT="Frequency Lock"
+		;;
+		2)
+			RESULT="Cell Lock"
+		;;
+	esac
+	if [[ "$CHECK" == "[1-2]" ]]; then
+		atcmd "AT*CELL=$MODE" >> /dev/null 2>&1
+		restart
+	fi
+	echo "$RESULT Disabled"
+}
+
+status(){
+	check
+	case "$CHECK" in
+		0)
+			RESULT="Lock Disabled"
+		;;
+		1)
+			RESULT="Frequency Locked"
+		;;
+		2)
+			RESULT="Cell Locked"
+		;;
+	esac
+	echo "Status: $RESULT"
+}
+
+restart(){
+	ifup wwan
+}
+
+case "$1" in
+	H|h)
+		help
+	;;
+	0)
+		disable
+	;;
+	1|2)
+		enable
+	;;
+	\?)
+		status
+	;;
+	""|*)
+		echo "Enter H For More Details"
+	;;
+esac

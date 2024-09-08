@@ -1,0 +1,65 @@
+#!/bin/sh
+#
+# Copyright (c) 2023 LENAR
+#
+CMD="$1"
+IMEI="$2"
+
+help(){
+	printf "Usage: `basename $0` <Method> <IMEI>\n\n"
+	printf "<Method>:\n"
+	printf "D - Delete\n"
+	printf "U - Update\n"
+	printf "W - Write\n"
+	printf "R - Read\n"
+	printf "? - Check\n\n"
+	printf "<IMEI>:\nYour Custom IMEI\n"
+}
+
+delete(){
+	atcmd "AT*MRD_IMEI=$CMD" >> /dev/null 2>&1
+	echo "IMEI Deleted"
+}
+
+imei(){
+	if [[ "$IMEI" =~ "^[0-9]+$" ]] && [ ${#IMEI} -eq 15 ]; then
+		atcmd "AT*MRD_IMEI=$CMD,0101,12NOV2010,$IMEI" >> /dev/null 2>&1
+		case "$CMD" in
+			U|u)
+				TITLE="Update"
+			;;
+			W|w)
+				TITLE="Write"
+			;;
+		esac
+		echo "$TITLE Done"
+	else
+		echo "IMEI Not Valid"
+	fi
+}
+
+status(){
+	if [[ "$CMD" == "[Rr]" ]]; then
+		RESULT=$(atcmd "AT*MRD_IMEI=$CMD" | awk -F[:,] '{print $2,$3,$4,$5,$6}' | xargs)
+	else
+		RESULT=$(atcmd "AT*MRD_IMEI$CMD" | awk -F: '{print $2}' | xargs)
+	fi
+	echo "Result: $RESULT"
+}
+
+case "$1" in
+	H|h)
+		help
+	;;
+	D|d) delete
+	;;
+	U|u|W|w)
+		imei
+	;;
+	R|r|\?)
+		status
+	;;
+	""|*)
+		echo "Enter H For More Details"
+	;;
+esac

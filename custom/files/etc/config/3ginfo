@@ -1,0 +1,4 @@
+config 3ginfo
+	option website 'http://www.btsearch.pl/szukaj.php?mode=std&search='
+	option network 'wwan'
+	option device '/dev/ttyACM0'
