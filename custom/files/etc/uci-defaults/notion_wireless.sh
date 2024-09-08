@@ -15,11 +15,11 @@ do
   uci set wireless."$RADIO".disabled="0"
   uci set wireless."$RADIO".cell_density="0"
   if [ "$BAND" = "2g" ];then
-    uci set wireless.default_"$RADIO".ssid="Notion-${MD}"
+    uci set wireless.default_"$RADIO".ssid="R281-${MD}"
     uci set wireless.default_"$RADIO".ifname="wifi-2g"
     # uci set wireless."$RADIO".channel="11"
   else
-    uci set wireless.default_"$RADIO".ssid="Notion-${MD}-5G"
+    uci set wireless.default_"$RADIO".ssid="R281-${MD}-5G"
     uci set wireless.default_"$RADIO".ifname="wifi-5g"
     # uci set wireless."$RADIO".channel="36"
   fi
